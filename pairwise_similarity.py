@@ -40,7 +40,7 @@ def pairwise_similarity(negative_samples, negative_labels, positive_samples,
 
     num_pos_instance = positive_labels.shape[0]
     svm_scores = []
-    order_matrix = []
+    order_matrix = np.zeros((num_pos_instance, num_pos_instance))
 
     for i in range(num_pos_instance):
         data_samples = np.concatenate(
@@ -55,9 +55,12 @@ def pairwise_similarity(negative_samples, negative_labels, positive_samples,
         svm_scores.append(scores_i.squeeze())
 
     svm_scores = np.stack(svm_scores, axis=0)
-
-    index_order = np.argsort(svm_scores * -1, axis=1) + 1
-    similarity_scores = index_order * np.transpose(index_order)
+    index_order = np.argsort(svm_scores * -1, axis=1)
+    
+    for i in range(num_pos_instance):
+        index = index_order[i]
+        order_matrix[i][index] = np.arange(0, num_pos_instance) + 1
+    similarity_scores = order_matrix * np.transpose(order_matrix)
     similarity_scores = 1 / similarity_scores
     similarity_scores[svm_scores <= 0] = 0
     similarity_scores[np.transpose(svm_scores) <= 0] = 0
